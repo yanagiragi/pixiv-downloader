@@ -11,6 +11,8 @@ const settingPath = args.s ?? path.join(__dirname, 'data', 'setting.json')
 const cachePath = args.c ?? path.join(__dirname, 'data', 'cache.json')
 const corruptedPath = args.r ?? path.join(__dirname, 'data', 'corrupted.json')
 const verbose = args.v === 'true'
+const webhookUrl = args.w
+const webhookToken = args.t
 
 const StoragePath = path.join(__dirname, 'Storage')
 
@@ -63,6 +65,32 @@ async function GetPixivImage (url, storePath, filename, illustId) {
 		const body = await response.buffer()
 		fs.writeFileSync(savePath, body, 'binary')
 		console.log(`Stored https://www.pixiv.net/artworks/${illustId} to ${savePath}`)
+
+		if (webhookUrl) {
+			const options = {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${webhookToken}`
+				},
+				body: JSON.stringify({
+					message: `[Pixiv-Downloader] downloaded: https://www.pixiv.net/artworks/${illustId}`
+				})
+			}
+
+			console.log(args)
+			console.log(webhookUrl, options)
+
+			const resp = await fetch(webhookUrl, options)
+			if (resp.ok) {
+				console.log(`Successfully notify ${savePath} downloaded`)
+			}
+			else {
+				const context = await resp.text()
+				console.log(`Unable to notify. Response = ${context}`)
+			}
+		}
+
+
 		return true
 	} catch (error) {
 		console.log(error)
@@ -80,17 +108,20 @@ async function GetImageUrlAndTitle (illustId) {
 		const resp = await FetchFromPixiv(`https://www.pixiv.net/artworks/${illustId}`)
 		const data = await resp.text()
 		const raw = data.match(/id="meta-preload-data" content='(.*)'>/)
-		// console.log(data)
+		if (raw?.[1] == null) {
+			console.log(`Unable to find raw[1] in ${raw}`)
+			return [null, null, null]
+		}
 		const json = JSON.parse(raw[1])
 		const src = json?.illust?.[illustId]?.urls?.original
 		const title = json?.illust?.[illustId]?.title
 		const filename = src.match(/\d+_[p|ugoira]/)[0]
 		const prefix = src.substring(0, src.indexOf(filename) + filename.length)
 		const postfix = src.substring(src.indexOf(filename) + filename.length + 1, src.length)
-		return [sanitize(title), [prefix, postfix]]
+		return [sanitize(title), prefix, postfix]
 	} catch (err) {
 		console.log(err)
-		return [null, null]
+		return [null, null, null]
 	}
 }
 
@@ -135,7 +166,7 @@ async function DealUserIllusts (setting, caches) {
 				continue
 			}
 
-			const [title, [prefix, postfix]] = await GetImageUrlAndTitle(illustId)
+			const [title, prefix, postfix] = await GetImageUrlAndTitle(illustId)
 			if (title == null) {
 				console.log(`Error when fetching ${illustId}. Skipped`)
 				continue
