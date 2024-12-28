@@ -52,7 +52,7 @@ async function FetchFromPixiv(url, option = {})
  * @param {string} filename - filename of the image to be stored
  * @returns {boolean} Is success or not. if skipped return true.
  */
-async function GetPixivImage (url, storePath, filename) {
+async function GetPixivImage (url, storePath, filename, illustId) {
 	try {
 		EnsureDirExist(storePath)
 		const savePath = path.join(storePath, filename)
@@ -64,7 +64,7 @@ async function GetPixivImage (url, storePath, filename) {
 		if (!response.ok) return false
 		const body = await response.buffer()
 		fs.writeFileSync(savePath, body, 'binary')
-		console.log(`Stored: ${savePath}`)
+		console.log(`Stored https://www.pixiv.net/artworks/${illustId} to ${savePath}`)
 		return true
 	} catch (error) {
 		console.log(error)
@@ -83,6 +83,7 @@ async function GetImageUrlAndTitle(illustId)
 		const resp = await FetchFromPixiv(`https://www.pixiv.net/artworks/${illustId}`)
 		const data = await resp.text()
 		const raw = data.match(/id="meta-preload-data" content='(.*)'>/)
+		// console.log(data)
 		const json = JSON.parse(raw[1])
 		const src = json?.illust?.[illustId]?.urls?.original
 		const title = json?.illust?.[illustId]?.title
@@ -147,7 +148,7 @@ async function DealUserIllusts(setting, caches) {
 			
 			let count = 0, canDonwload = true
 			do {
-				canDonwload = await GetPixivImage(`${prefix}${count}${postfix}`, path.join(saveFolderPath, `${illustId}-${title}`), `${illustId}-${count}${postfix}`)
+				canDonwload = await GetPixivImage(`${prefix}${count}${postfix}`, path.join(saveFolderPath, `${illustId}-${title}`), `${illustId}-${count}${postfix}`, illustId)
 				count += 1
 			} while (canDonwload)
 
