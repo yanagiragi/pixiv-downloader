@@ -70,7 +70,8 @@ async function GetPixivImage (url, storePath, filename, illustId) {
 			const options = {
 				method: 'POST',
 				headers: {
-					'Authorization': `Bearer ${webhookToken}`
+					'Authorization': `Bearer ${webhookToken}`,
+					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
 					message: `[Pixiv-Downloader] downloaded: https://www.pixiv.net/artworks/${illustId}`
