@@ -74,12 +74,10 @@ async function GetPixivImage (url, storePath, filename, illustId) {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
+					url: url,
 					message: `[Pixiv-Downloader] downloaded: https://www.pixiv.net/artworks/${illustId}`
 				})
 			}
-
-			console.log(args)
-			console.log(webhookUrl, options)
 
 			const resp = await fetch(webhookUrl, options)
 			if (resp.ok) {
