@@ -1,9 +1,13 @@
 #!/usr/bin/env node
-const fs = require('fs')
-const path = require('path')
-const fetch = require('node-fetch')
-const minimist = require('minimist')
-const sanitize = require('sanitize-filename')
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import fetch from 'node-fetch'
+import minimist from 'minimist'
+import sanitize from 'sanitize-filename'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const args = minimist(process.argv.slice(2))
 const sessionId = args.i
@@ -210,16 +214,13 @@ async function Run () {
 	}
 }
 
-if (require.main === module) {
+console.log(`=====================================`)
+console.log(`Session: ${sessionId}`)
+console.log(`=====================================`)
 
-	console.log(`=====================================`)
-	console.log(`Session: ${sessionId}`)
-	console.log(`=====================================`)
-
-	if (sessionId == null) {
-		console.log('Session cannot be null. Abort.')
-	}
-	else {
-		Run()
-	}
+if (sessionId == null) {
+	console.log('Session cannot be null. Abort.')
+}
+else {
+	Run()
 }

@@ -1,0 +1,15 @@
+name: pixiv-dl
+
+services:
+  pixiv-dl:
+    image: pixiv-downloader
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      - SESSION=${SESSION}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - WEBHOOK_TOKEN=${WEBHOOK_TOKEN}
+    volumes:
+      - ${DATA_DIR}:/Pixiv-Downloader/bin/data
+      - ${STORAGE_DIR}:/Pixiv-Downloader/bin/Storage
